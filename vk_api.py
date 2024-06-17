@@ -1,4 +1,5 @@
 import requests
+import datetime
 
 
 class GetVkProfilePhotos:
@@ -26,6 +27,9 @@ class GetVkProfilePhotos:
 		photo_list = self._process_photos(photos)
 		return photo_list
 
+	def _unix_to_date(self, unix_time):
+		return datetime.datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d %H-%M-%S')
+
 	def _process_photos(self, photos):
 		photo_list = []
 		for photo in photos:
@@ -33,7 +37,7 @@ class GetVkProfilePhotos:
 			size_url = self._get_size_url(sizes)
 			photo_list.append({
 				'likes': photo['likes']['count'],
-				'date': photo['date'],
+				'date': self._unix_to_date(photo['date']),
 				'url': size_url
 			})
 		return photo_list
