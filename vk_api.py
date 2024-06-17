@@ -1,7 +1,7 @@
 import requests
 
 
-class GetVkPhotos:
+class GetVkProfilePhotos:
 	def __init__(self, token_path, user_id, album_id='wall', count=5):
 		self.url = 'https://api.vk.com/method/photos.get'
 		self.token_path = token_path
@@ -21,23 +21,28 @@ class GetVkPhotos:
 			return requests.get(self.url, params=self.params).json()
 
 	def get_photos(self):
-		photos_info = self.get_photos_info()['response']['items']
-		photos_list = []
-		for photo in photos_info:
-			test = ''
-			for size in photo['sizes']:
-				if size['type'] == 'w':
-					test = size['url']
-				elif size['type'] == 'z':
-					test = size['url']
+		response = self.get_photos_info()
+		photos = response['response']['items']
+		photo_list = self._process_photos(photos)
+		return photo_list
 
-			photos_list.append({
+	def _process_photos(self, photos):
+		photo_list = []
+		for photo in photos:
+			sizes = photo['sizes']
+			size_url = self._get_size_url(sizes)
+			photo_list.append({
 				'likes': photo['likes']['count'],
 				'date': photo['date'],
-				'sizes': test
+				'url': size_url
 			})
+		return photo_list
 
-		return photos_list
+	def _get_size_url(self, sizes):
+		for size in sizes:
+			if size['type'] in ['w', 'z']:
+				return size['url']
+		return None
 
 
-test = GetVkPhotos('service_info/vk_token.txt', 133468233, 'profile', 2).get_photos()
+test = GetVkProfilePhotos('service_info/vk_token.txt', 133468233, 'profile', 2).get_photos()
