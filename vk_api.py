@@ -4,9 +4,10 @@ import pprint
 import requests
 
 
-class GetVkToken:
+class GetVkPhotos:
 	def __init__(self, token, user_id, album_id, count=5):
 		self.url = 'https://api.vk.com/method/photos.get'
+		self.token_path = token
 		self.params = {
 			'access_token': token,
 			'owner_id': user_id,
@@ -17,13 +18,11 @@ class GetVkToken:
 			'v': 5.131,
 		}
 
-
-class GetVkPhotos(GetVkToken):
 	def get_photos_info(self):
-		return requests.get(self.url, params=self.params).json()
+		with open(self.token_path, encoding='utf-8') as f:
+			self.params['access_token'] = f.read().strip()
+			return requests.get(self.url, params=self.params).json()
 
 
-with open('service_info/vk_token.txt', encoding='utf-8') as f:
-	token = f.read().strip()
-	photos = GetVkPhotos(token, 133468233, 'profile', 12).get_photos_info()
-	pprint.pprint(photos['response']['items'])
+test = GetVkPhotos('service_info/vk_token.txt', 133468233, 'profile', 12).get_photos_info()
+pprint.pprint(test)
