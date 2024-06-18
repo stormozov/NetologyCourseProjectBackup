@@ -1,8 +1,10 @@
 import requests
-import datetime
+from modules.vk_modules.vk_photo_processor import VKPhotoProcessor
+
+import pprint
 
 
-class GetVkProfilePhotos:
+class VkProfilePhotosRetriever(VKPhotoProcessor):
 	API_VERSION: int = 5.199
 	URL: str = 'https://api.vk.com/method/photos.get'
 	DATE_FORMAT: str = '%Y-%m-%d %H-%M-%S'
@@ -20,7 +22,7 @@ class GetVkProfilePhotos:
 			'v': self.API_VERSION,
 		}
 
-	def get_photos_info(self):
+	def retrieve_photo_data(self):
 		with open(self.token_path, encoding='utf-8') as f:
 			self.params['access_token'] = f.read().strip()
 			try:
@@ -32,37 +34,14 @@ class GetVkProfilePhotos:
 				return None
 
 	def get_photos(self):
-		response = self.get_photos_info()
+		response = self.retrieve_photo_data()
 		if 'response' in response and 'items' in response['response']:
 			photos = response['response']['items']
-			photo_list = self._process_photos(photos)
+			photo_list = self._extract_photo_info(photos, self.DATE_FORMAT, self.PREFERRED_SIZES)
 			return photo_list
 		else:
 			return []
 
-	def _unix_to_date(self, unix_time: int) -> str:
-		try:
-			return datetime.datetime.fromtimestamp(unix_time).strftime(self.DATE_FORMAT)
-		except Exception as e:
-			print(f"Error converting unix time to date: {e}")
-			return ''
 
-	def _process_photos(self, photos):
-		photo_list = []
-		for photo in photos:
-			sizes = photo.get('sizes', [])
-			likes_count = photo['likes'].get('count', 0) if 'likes' in photo else 0
-			size_url = self._get_size_url(sizes) or 'default_url'
-			photo_list.append({
-				'likes': likes_count,
-				'date': self._unix_to_date(photo['date']),
-				'url': size_url
-			})
-		return photo_list
-
-	def _get_size_url(self, sizes: list):
-		# Return the url for the preferred size types
-		return next((size['url'] for size in sizes if size['type'] in self.PREFERRED_SIZES), None)
-
-
-test = GetVkProfilePhotos('service_info/vk_token.txt', 133468233, 'profile', 2).get_photos()
+test = VkProfilePhotosRetriever('service_info/vk_token.txt', 133468233, 'profile', 2).get_photos()
+pprint.pprint(test)
