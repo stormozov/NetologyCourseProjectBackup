@@ -8,19 +8,24 @@ class YaDiskUploader:
 			'Accept': 'application/json',
 			"Authorization": '',
 		}
+		self.folder_name = 'Бэкап фото из ВК'
 
-	def upload_file(self, file_url, yadisk_path: str, file_name: str = 'photo'):
+	def upload_file(self, files: list):
 		client = yadisk.Client(token=self.headers['Authorization'])
-
 		if client.check_token():
-			if not client.is_dir(yadisk_path):
-				client.mkdir(yadisk_path)
+			if not client.is_dir(self.folder_name):
+				client.mkdir(self.folder_name)
 				print('Folder created successfully.')
+
+			for file in files:
+				file_name = file['likes']
+				file_url = file['url']
+				client.upload_url(file_url, f'{self.folder_name}/{file_name}.jpg')
+				print(f'File "{file_name}.jpg" uploaded successfully.')
+
+			print(f'{len(files)} files uploaded successfully.')
 		else:
 			print('Token is invalid.')
-
-		upload_response = client.upload_url(file_url, f'{yadisk_path}/{file_name}.jpg')
-		print(upload_response)
 
 
 test_url = [
@@ -38,4 +43,5 @@ test_url = [
 	}
 ]
 
-ya_test = YaDiskUploader().upload_file(test_url[1]['url'], 'Бэкап фото из ВК', 'test')
+ya_test = YaDiskUploader()
+ya_test.upload_file(test_url)
