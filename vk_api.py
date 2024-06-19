@@ -1,7 +1,7 @@
 import configparser
 import requests
 from modules.vk_modules.vk_photo_processor import VKPhotoProcessor
-
+import json
 
 class VkProfilePhotosRetriever(VKPhotoProcessor):
 	config = configparser.ConfigParser()
@@ -24,6 +24,7 @@ class VkProfilePhotosRetriever(VKPhotoProcessor):
 			'photo_sizes': 1,
 			'v': self.API_VERSION,
 		}
+		self.json_object = ''
 
 	def retrieve_photo_data(self):
 		try:
@@ -38,9 +39,15 @@ class VkProfilePhotosRetriever(VKPhotoProcessor):
 		if 'response' in response and 'items' in response['response']:
 			photos = response['response']['items']
 			photo_list = self._extract_photo_info(photos, self.DATE_FORMAT, self.PREFERRED_SIZES)
-			return photo_list
+			self.json_object = photo_list[1]
+			return photo_list[0]
 		else:
 			return []
+
+	def create_json(self):
+		data = json.dumps(self.json_object)
+		with open("result.json", "w") as f:
+			f.write(data)
 
 
 test = VkProfilePhotosRetriever('photos.get', 133468233, 'profile', 12)
