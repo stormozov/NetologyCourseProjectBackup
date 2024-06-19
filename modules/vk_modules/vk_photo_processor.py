@@ -23,9 +23,6 @@ class VKPhotoProcessor:
 		return next(([size['url'], size['type']] for size in sizes if size['type'] in preferred_size), None)
 
 	def _create_filename(self, photo, likes, date, photo_list) -> str:
-		filename = f"{likes}"
-		for item in photo_list:
-			if item["likes"] == likes and item != photo:
-				filename += f"_{date}"
-				break
+		duplicates = [item for item in photo_list if item["likes"] == likes and item != photo]
+		filename = f"{likes}" + (f"_{date}" if duplicates else "")
 		return filename
