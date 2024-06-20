@@ -1,7 +1,8 @@
 import configparser
 import requests
 from modules.vk_modules.vk_photo_processor import VKPhotoProcessor
-import json
+from modules.create_json.create_json import create_json_file
+
 
 class VkProfilePhotosRetriever(VKPhotoProcessor):
 	config = configparser.ConfigParser()
@@ -24,31 +25,30 @@ class VkProfilePhotosRetriever(VKPhotoProcessor):
 			'photo_sizes': 1,
 			'v': self.API_VERSION,
 		}
-		self.json_object = ''
+		self.extracted_photo_info: dict[str, list] = {}
 
-	def retrieve_photo_data(self):
+	def fetch_photo_data(self):
 		try:
 			response = requests.get(self.URL + self.method, params=self.params)
-			return response.json()
+			if response.status_code == 200:
+				return response.json()
+			else:
+				print(f'Error: Invalid response code — {response.status_code}')
 		except requests.exceptions.RequestException as e:
 			print(f"Error during HTTP request: {e}")
 			return None
 
-	def get_photos(self):
-		response = self.retrieve_photo_data()
-		if 'response' in response and 'items' in response['response']:
-			photos = response['response']['items']
-			photo_list = self._extract_photo_info(photos, self.DATE_FORMAT, self.PREFERRED_SIZES)
-			self.json_object = photo_list[1]
-			return photo_list[0]
+	def get_photos_info(self):
+		data = self.fetch_photo_data()
+		if 'response' in data and 'items' in data['response']:
+			photos = data['response']['items']
+			self.extracted_photo_info = self._extract_photo_info(
+				photos, self.DATE_FORMAT, self.PREFERRED_SIZES
+			)
+			return self.extracted_photo_info['full_info']
 		else:
 			return []
 
-	def create_json(self):
-		data = json.dumps(self.json_object)
-		with open("result.json", "w") as f:
-			f.write(data)
-
 
 test = VkProfilePhotosRetriever('photos.get', 133468233, 'profile', 12)
-result = test.get_photos()
+result = test.get_photos_info()
