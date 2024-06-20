@@ -1,5 +1,5 @@
 import configparser
-import requests
+from modules.fetch_photos_info.fetch_photos_info import fetch_photo_data
 from modules.vk_modules.vk_photo_processor import VKPhotoProcessor
 from modules.create_json.create_json import create_json_file
 
@@ -27,19 +27,8 @@ class VkProfilePhotosRetriever(VKPhotoProcessor):
 		}
 		self.extracted_photo_info: dict[str, list] = {}
 
-	def fetch_photo_data(self):
-		try:
-			response = requests.get(self.URL + self.method, params=self.params)
-			if response.status_code == 200:
-				return response.json()
-			else:
-				print(f'Error: Invalid response code — {response.status_code}')
-		except requests.exceptions.RequestException as e:
-			print(f"Error during HTTP request: {e}")
-			return None
-
 	def get_photos_info(self):
-		data = self.fetch_photo_data()
+		data = fetch_photo_data(self.URL, self.method, self.params)
 		if 'response' in data and 'items' in data['response']:
 			photos = data['response']['items']
 			self.extracted_photo_info = self._extract_photo_info(
