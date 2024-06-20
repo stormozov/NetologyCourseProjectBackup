@@ -6,7 +6,7 @@ class VKPhotoProcessor:
 		extracted_photo_info = {'full_info': [], 'json': []}
 		for photo in photos:
 			sizes = photo.get('sizes', [])
-			likes_count = photo['likes'].get('count', 0) if 'likes' in photo else 0
+			likes_count = photo.get('likes', {}).get('count', 0)
 			date = UnixToDate(photo['date'], date_format).convert()
 			filename = self._create_filename(photo, photo['likes']['count'], date, extracted_photo_info['full_info'])
 			size_url, size_type = self._find_preferred_size_url(sizes, preferred_size)
@@ -24,5 +24,4 @@ class VKPhotoProcessor:
 
 	def _create_filename(self, photo, likes, date, photo_list) -> str:
 		duplicates = [item for item in photo_list if item["likes"] == likes and item != photo]
-		filename = f"{likes}" + (f"_{date}" if duplicates else "")
-		return filename
+		return f"{likes}" + (f"_{date}" if duplicates else "")
