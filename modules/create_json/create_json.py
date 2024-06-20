@@ -13,5 +13,19 @@ def create_json_file(data: list[dict], filename: str = "result.json") -> None:
     Returns:
         None
     """
-    with open(filename, "w") as file:
-        json.dump(data, file)
+    if not data:
+        return
+    if not isinstance(data, list):
+        raise TypeError("data must be a list")
+    if not all(isinstance(item, dict) for item in data):
+        raise TypeError("all items in data must be dicts")
+    if not isinstance(filename, str):
+        raise TypeError("filename must be a string")
+
+    try:
+        with open(filename, "w") as file:
+            json.dump(data, file)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File {filename} not found")
+    except PermissionError:
+        raise PermissionError(f"Permission denied when trying to write to {filename}")
