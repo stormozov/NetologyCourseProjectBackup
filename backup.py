@@ -11,12 +11,12 @@ class Backup:
 
 	def upload(self):
 		ya_disk_uploader = YaDiskUploader(self.full_info)
-		ya_disk_uploader.upload_file()
+		ya_disk_uploader.create_folder_process()
 
 	def create_json(self):
 		create_json_file(self.json)
 
 
 backup_photos_from_vk = Backup(133468233, 'profile', 12)
-# backup_photos_from_vk.upload()
+backup_photos_from_vk.upload()
 # backup_photos_from_vk.create_json()
