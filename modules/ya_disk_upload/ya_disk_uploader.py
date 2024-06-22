@@ -6,47 +6,56 @@ class YaDiskUploader:
 		self.headers = {
 			"Authorization": '',
 		}
-		self.folder_name = 'Бэкап фото из ВК'
+		self.url = 'https://cloud-api.yandex.net/v1/disk/resources'
+		self.root_folder_name = 'Бэкап фото из ВК'
 		self.photos_list = photos
+		self.date_format = '%d %B %Y'
 
 	def create_folder_process(self):
-		url = 'https://cloud-api.yandex.net/v1/disk/resources'
-		params = {'path': self.folder_name}
-		response = requests.get(url, headers=self.headers, params=params)
+		self._create_root_folder()
+		self._create_folder()
 
-		if response.status_code == 200:
-			if self._delete_folder(url, params):
-				if self._create_folder(url, params):
-					print(f'Папка "{self.folder_name}" была создана повторно')
-				else:
-					print(f'Папка "{self.folder_name}" не была создана повторно')
-			else:
-				print(f'Папка "{self.folder_name}" уже создана')
+	def _create_root_folder(self):
+		params = {'path': self.root_folder_name}
+		response = requests.get(self.url, headers=self.headers, params=params)
+
+		if response.status_code == 404:
+			requests.put(self.url, headers=self.headers, params=params)
+			print(f'Создана корневая папка резервных копий "{self.root_folder_name}"')
+
+	def _create_folder(self):
+		root_folder_params = {'path': f'{self.root_folder_name}'}
+		create_folder_response = requests.get(self.url, headers=self.headers, params=root_folder_params)
+		json_response = create_folder_response.json()['_embedded']['items']
+
+		if not json_response:
+			params = {'path': f'{self.root_folder_name}/Резервная копия №1'}
+			request = requests.put(self.url, headers=self.headers, params=params)
+			if request.status_code == 201:
+				print(f'Создана папка "Резервная копия №1"')
+				self._upload_photos('Резервная копия №1')
 		else:
-			print(f'Папки "{self.folder_name}" нет на диске')
-			if self._create_folder(url, params):
-				print(f'Папка "{self.folder_name}" была создана')
-			else:
-				print(f'Папка "{self.folder_name}" не была создана')
+			count = 2
+			while True:
+				params = {'path': f'{self.root_folder_name}/Резервная копия №{count}'}
+				request = requests.put(self.url, headers=self.headers, params=params)
 
-	def _delete_folder(self, url, params):
-		response = requests.delete(url, headers=self.headers, params=params)
-		return response.status_code == 204
+				if request.status_code == 201:
+					print(f'Создана папка "Резервная копия №{count}"')
+					break
+				count += 1
 
-	def _create_folder(self, url, params):
-		response = requests.put(url, headers=self.headers, params=params)
-		return response.status_code == 201
+			self._upload_photos(f'Резервная копия №{count}')
 
-	def _upload_photos(self):
-		url2 = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
-		for photo in self.photos_list:
+	def _upload_photos(self, folder_name: str):
+		for idx, photo in enumerate(self.photos_list):
 			upload_params = {
 				'url': photo['url'],
-				'path': f'{self.folder_name}/{photo["filename"]}'
+				'path': f'{self.root_folder_name}/{folder_name}/{photo['filename']}'
 			}
-			upload = requests.post(url2, headers=self.headers, params=upload_params)
+			upload = requests.post(f'{self.url}/upload', headers=self.headers, params=upload_params)
 			if upload.status_code == 202:
-				print(f'Фото {photo["filename"]} загружено')
+				print(f'{idx + 1}. Фото "{photo["filename"]}" загружено')
 			else:
-				print(f'Фото {photo["filename"]} не загружено')
+				print(f'Фото "{photo["filename"]}" не загружено')
 		print(f'— Все {len(self.photos_list)} фото загружены')
