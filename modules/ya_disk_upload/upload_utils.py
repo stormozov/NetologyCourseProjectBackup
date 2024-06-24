@@ -1,5 +1,6 @@
 import time
 import requests
+from tqdm import tqdm
 
 URL = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
 
@@ -20,12 +21,11 @@ class Uploader:
 		try:
 			upload = self.session.post(URL, params=upload_params)
 			upload.raise_for_status()
-			print(f"Фото {upload_params['path']} загружено")
 		except requests.exceptions.HTTPError as e:
 			print(f"Фото {upload_params['path']} не загружено: {e}")
 
 	def upload_photos(self, folder_type, folder_name) -> None:
-		for idx, photo in enumerate(self.photos_list):
+		for photo in tqdm(self.photos_list, desc="Загрузка фото на Яндекс Диск", unit="фото"):
 			upload_params = self._prepare_upload_params(photo, folder_type, folder_name)
 			self._upload_photo(upload_params)
 			time.sleep(0.5)
