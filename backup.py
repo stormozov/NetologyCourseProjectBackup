@@ -19,16 +19,17 @@ class Backup:
 		self.json = data.get_photos_info()['json']
 
 	def upload(self, album_id: str = 'profile') -> None:
-		ya_disk_uploader = YaDiskUploader(self.ya_disk_token, self.full_info)
-		ya_disk_uploader.create_folder_process(album_id)
+		ya_disk_uploader = YaDiskUploader(self.ya_disk_token, self.full_info, album_id)
+		ya_disk_uploader.run()
 
 	def create_json(self) -> None:
 		create_json_file(self.json)
 
 
-backup_photos_from_vk = Backup(
-	VK_TOKEN, YA_DISK_TOKEN,
-	133468233, 'profile', 12
-)
-backup_photos_from_vk.upload()
-# backup_photos_from_vk.create_json()
+if __name__ == '__main__':
+	backup_photos_from_vk = Backup(
+		VK_TOKEN, YA_DISK_TOKEN,
+		133468233, 'profile', 12
+	)
+	backup_photos_from_vk.upload()
+	# backup_photos_from_vk.create_json()
