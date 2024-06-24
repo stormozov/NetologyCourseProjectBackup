@@ -32,9 +32,9 @@ class FolderUtils:
 			'profile': 'Фото профиля',
 			'wall': 'Фото со стены',
 			'saved': 'Сохраненные фото',
-			'default': 'Альбом'
+			'albums': 'Альбомы'
 		}
-		return folder_mapping.get(album_id, folder_mapping.get('default'))
+		return folder_mapping.get(album_id, folder_mapping.get('albums'))
 
 	def _create_folder(self, path: str) -> None:
 		params = {'path': path}

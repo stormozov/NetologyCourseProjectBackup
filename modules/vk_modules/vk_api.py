@@ -33,4 +33,4 @@ class VkProfilePhotosRetriever(VKPhotoProcessor):
 			)
 			return extracted_photo_info
 		else:
-			return []
+			raise ValueError('Не удалось получить данные о фотографиях')
