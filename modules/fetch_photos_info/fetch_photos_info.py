@@ -30,7 +30,6 @@ def fetch_photo_data(url: str, method: str, params: Dict[str, Union[str, int]]) 
 		if response.status_code == 200:
 			return response.json()
 		else:
-			print(f'Error: Invalid response code — {response.status_code}')
+			raise requests.RequestException(f'Error: Invalid response code — {response.status_code}')
 	except requests.exceptions.RequestException as e:
-		print(f"Error during HTTP request: {e}")
-		return None
+		raise requests.RequestException(f"Error during HTTP request: {e}")
