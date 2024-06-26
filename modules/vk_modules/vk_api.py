@@ -47,13 +47,13 @@ class VkProfilePhotosRetriever:
 		Raises:
 			ValueError: If the VK API returns an error or no photos are found.
 		"""
-		data = fetch_photo_data(URL, self.method, self.params)
+		data: dict = fetch_photo_data(URL, self.method, self.params)
 
 		if 'response' in data and 'items' in data['response']:
 			photos = data['response']['items']
-			extracted_photo_info = VKPhotoProcessor().get_photo_info(
+			extracted_photo_info: dict[str, list] = VKPhotoProcessor(
 				photos, DATE_FORMAT, PREFERRED_SIZES
-			)
+			).get_photo_info()
 			return extracted_photo_info
 		else:
 			raise ValueError('Не удалось получить данные о фотографиях')
