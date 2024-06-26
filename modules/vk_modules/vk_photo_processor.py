@@ -1,5 +1,5 @@
 import time
-from typing import List, Any
+from typing import Union
 from modules.unix_to_date.unix_to_date import UnixToDate
 from tqdm import tqdm
 
@@ -7,38 +7,60 @@ from tqdm import tqdm
 class VKPhotoProcessor:
 	"""A class to process and extract information from VK photos."""
 
-	def _extract_photo_info(self, photos, date_format: str, preferred_size: str = 'z') -> dict[
-		str, list]:
+	def get_photo_info(self, photos, date_format: str, preferred_size: str) \
+		-> dict[str, Union[int, str, list]]:
 		"""
-		Extracts information from a list of photo objects.
+		Extracts relevant data from a list of photos.
 
 		Args:
-			photos: A list of photo objects retrieved from the VK API.
-			date_format: The format to use for converting Unix timestamps to dates.
-			preferred_size: The preferred photo size to extract (default: 'z').
+			photos: The list of photos to extract data from.
+			date_format: The format for converting Unix timestamps to dates.
+			preferred_size: The preferred size type to search for.
 
 		Returns:
-			A dictionary containing two lists: 'full_info' and 'json'. 'full_info' contains
-		detailed information about each photo, while 'json' contains a simplified version of the
-		data.
+			dict[str, Union[int, str, list]]: A dictionary containing extracted photo information.
+				- 'full_info' (list): A list of dictionaries with detailed photo information.
+				- 'json' (list): A list of dictionaries with photo filenames and size types.
 		"""
-		extracted_photo_info = {'full_info': [], 'json': []}
+		extracted_photo_info: dict[str, Union[int, str, list]] = {'full_info': [], 'json': []}
+
 		for photo in tqdm(photos, desc="Получение и обработка данных о фотографии", unit="фото"):
 			time.sleep(0.5)
-			sizes = photo.get('sizes', [])
-			likes_count = photo.get('likes', {}).get('count', 0)
-			date = UnixToDate(photo['date'], date_format).convert()
-			filename = self._create_filename(photo, photo['likes']['count'], date,
-											 extracted_photo_info['full_info'])
-			size_url, size_type = self._find_preferred_size_url(sizes, preferred_size)
+			photo_data: dict[str, any] = self._extract_photo_data(photo, date_format)
+			size_url, size_type = self._find_preferred_size_url(photo_data['sizes'], preferred_size)
+			filename: str = self._create_filename(
+				photo, photo_data['likes'], photo_data['date'],
+				extracted_photo_info['full_info']
+			)
 			extracted_photo_info['full_info'].append({
 				'filename': f'{filename}.jpg',
 				'url': size_url,
-				'likes': likes_count,
-				'date': date
+				'likes': photo_data['likes'],
+				'date': photo_data['date']
 			})
 			extracted_photo_info['json'].append({'filename': f'{filename}.jpg', 'size': size_type})
+
 		return extracted_photo_info
+
+	@staticmethod
+	def _extract_photo_data(photo: dict, date_format: str) -> dict[str, any]:
+		"""
+		Extracts relevant data from a photo dictionary.
+
+		Args:
+			photo (dict): A dictionary containing photo data.
+			date_format (str): The format to use for converting Unix timestamps to dates.
+
+		Returns:
+			dict: A dictionary containing the following keys:
+				- 'likes' (int): The number of likes for the photo.
+				- 'date' (str): The date the photo was taken.
+				- 'sizes' (list): A list of dictionaries representing different sizes of the image.
+		"""
+		likes_count: int = photo.get('likes', {}).get('count', 0)
+		date: str = UnixToDate(photo['date'], date_format).convert()
+		sizes: list = photo.get('sizes', [])
+		return {'likes': likes_count, 'date': date, 'sizes': sizes}
 
 	@staticmethod
 	def _find_preferred_size_url(sizes: list, preferred_size: str = 'z') -> tuple[str, str]:
@@ -80,5 +102,5 @@ class VKPhotoProcessor:
 		Returns:
 			A unique filename for the photo.
 		"""
-		duplicates = [item for item in photo_list if item["likes"] == likes and item != photo]
-		return f"{likes}" + (f"_{date}" if duplicates else "")
+		duplicates = [item for item in photo_list if item['likes'] == likes and item != photo]
+		return f'{likes}' + (f'_{date}' if duplicates else '')

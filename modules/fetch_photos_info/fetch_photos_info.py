@@ -2,8 +2,8 @@ from typing import Union, Dict
 import requests
 
 
-def fetch_photo_data(url: str, method: str, params: Dict[str, Union[str, int]]) -> Union[
-	Dict[str, str], None]:
+def fetch_photo_data(url: str, method: str, params: Dict[str, Union[str, int]]) \
+	-> Union[Dict[str, str], None]:
 	"""
 	Fetches photo data from the specified URL using the provided method and parameters.
 
@@ -26,7 +26,7 @@ def fetch_photo_data(url: str, method: str, params: Dict[str, Union[str, int]]) 
 		}
 	"""
 	try:
-		response = requests.get(url + method, params=params)
+		response = requests.get(f'{url}/{method}', params=params)
 		if response.status_code == 200:
 			return response.json()
 		else:

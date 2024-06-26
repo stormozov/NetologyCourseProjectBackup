@@ -2,12 +2,12 @@ from modules.fetch_photos_info.fetch_photos_info import fetch_photo_data
 from modules.vk_modules.vk_photo_processor import VKPhotoProcessor
 
 API_VERSION: float | int = 5.199
-URL: str = 'https://api.vk.com/method/'
+URL: str = 'https://api.vk.com/method'
 DATE_FORMAT: str = '%Y-%m-%d'
 PREFERRED_SIZES: str | list = ['w', 'z']
 
 
-class VkProfilePhotosRetriever(VKPhotoProcessor):
+class VkProfilePhotosRetriever:
 	"""Retrieves photos from a VK profile."""
 
 	def __init__(
@@ -51,7 +51,7 @@ class VkProfilePhotosRetriever(VKPhotoProcessor):
 
 		if 'response' in data and 'items' in data['response']:
 			photos = data['response']['items']
-			extracted_photo_info = self._extract_photo_info(
+			extracted_photo_info = VKPhotoProcessor().get_photo_info(
 				photos, DATE_FORMAT, PREFERRED_SIZES
 			)
 			return extracted_photo_info
