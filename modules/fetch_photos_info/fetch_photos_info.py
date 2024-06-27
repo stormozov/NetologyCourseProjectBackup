@@ -21,15 +21,23 @@ def fetch_photo_data(url: str, method: str, params: Dict[str, Union[str, int]]) 
 	Example:
 		>>> fetch_photo_data('https://example.com', 'photos', {'user_id': '123', 'album_id': '456'})
 		{
-			'photo1': {'url': 'https://example.com/photos/1.jpg', 'likes': 10},
-			'photo2': {'url': 'https://example.com/photos/2.jpg', 'likes': 5}
+			'photo1': {'url': 'https://example.com/photos/1.jpg', 'likes': 10, 'date': },
+			'photo2': {'url': 'https://example.com/photos/2.jpg', 'likes': 5, 'date': }
 		}
 	"""
 	try:
 		response = requests.get(f'{url}/{method}', params=params)
-		if response.status_code == 200:
-			return response.json()
+		response.raise_for_status()
+		data = response.json()
+
+		if 'error' in data:
+			raise ValueError(data['error']['error_msg'])
+
+		if 'response' in data and 'items' in data['response']:
+			return data
 		else:
-			raise requests.RequestException(f'Error: Invalid response code — {response.status_code}')
+			raise ValueError('No photos found in the VK API response.')
 	except requests.exceptions.RequestException as e:
 		raise requests.RequestException(f"Error during HTTP request: {e}")
+	except ValueError as e:
+		raise ValueError(f"Error in VK API response: {e}")
